@@ -12,6 +12,9 @@ router.get('/get/user', isAuthenticated, userController.getUsers)
 
 router.get('/get/user/:id', isAuthenticated, userController.getUserById)
 
+// update password
+// router.put('/verify/auth/updatepassword',isAuthenticated,use)
+
 // internal services
 router.get('/get/:id', userController.internalservices)
 

@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt')
 const twillo = require('../utlis/twillio');
 const consumer = require('../models/consumer');
 const sendsms = require('../utlis/twillio');
+const jwt = require('jsonwebtoken')
 
 const config = require('../config/config')
 
@@ -29,8 +30,8 @@ exports.registeruser = catchAsyncErrors(async (req, res) => {
             userType,
         } = req.body;
 
-        const finduser = await user.findOne({ email : email});
-        const finduserphone = await user.findOne({ phone : phone})
+        const finduser = await user.findOne({ email: email });
+        const finduserphone = await user.findOne({ phone: phone })
         // console.log(finduserphone , "finduserphone");
 
         if (finduser || finduserphone) {
@@ -85,10 +86,19 @@ exports.registeruser = catchAsyncErrors(async (req, res) => {
 // 
 exports.loginUser = catchAsyncErrors(async (req, res) => {
     try {
-        const { email, password, role } = req.body
+        const { email, password, role, phone } = req.body
         console.log({ email, password, role })
-        const finduser = await user.findOne({ email: email })
-        if(!email || !password || !role){
+        const finduser = await user.find({
+            $or: [{
+                email: email
+            },
+            {
+                phone: phone
+            }
+            ]
+        })
+        // console.log(finduser)
+        if (!role) {
             res.status(400).json({
                 success: false,
                 message: "Please Provide Email , Password , Role",
@@ -96,19 +106,24 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
             return
         }
         if (!finduser) {
-            console.log(finduser)
             res.status(400).json({
                 success: false,
                 message: "Login  failled in try",
             });
             return
         }
+        let passwordData
+        let data
+        finduser && finduser.map((i) => {
+            passwordData = i.password
+            data = i
+            console.log(i.password)
+        })
 
         if (finduser) {
-
-            // let ismatch = await bcrypt.compare(password , finduser.password)
-            let ismatch = finduser.comparePassword(password)
-
+            let ismatch = await bcrypt.compare(password, passwordData)
+            // let ismatch = finduser.comparePassword(password)
+            console.log(ismatch)
             if (!ismatch) {
                 res.status(400).json({
                     success: false,
@@ -117,31 +132,32 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
             }
 
             if (ismatch) {
-                const token = finduser.getJwtToken()
-                console.log(token)
-                console.log(finduser.userType)
+                const token = jwt.sign({
+                    userId: user.id,
+                    isAdmin: user.isAdmin
+                },
+                    "ADGSGWUEVVKBSSGKJSKJJKGS",
+                    { expiresIn: '1w' }
+                )
                 let userRoleData;
                 console.log("Role", role)
-                // "consumer", "businessOwner", "agent", "admin", "subAdmin"
-
-
                 if (role === "agent") {
-                    userRoleData = await agent.findOne({ agent_id: finduser._id })
+                    userRoleData = await agent.findOne({ agent_id: data._id })
                 } else if (role === "consumer") {
-                    userRoleData = await consumer.findOne({ name: finduser._id })
+                    userRoleData = await consumer.findOne({ name: data._id })
                 } else if (role === "businessOwner") {
-                    userRoleData = await bussinessOwner.findOne({ name: finduser._id })
+                    userRoleData = await bussinessOwner.findOne({ name: data._id })
                 } else if (role === "admin") {
-                    userRoleData = await admin.findOne({ name: finduser._id })
+                    userRoleData = await admin.findOne({ name: data._id })
                 } else if (role === "subAdmin") {
-                    userRoleData = await admin.findOne({ name: finduser._id })
+                    userRoleData = await admin.findOne({ name: data._id })
                 }
 
                 if (userRoleData) {
                     res.status(200).json({
                         success: true,
                         message: "Login succesfully ",
-                        data: finduser,
+                        data: data,
                         userRole: userRoleData,
                         token: token
                     });
@@ -164,6 +180,9 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
         });
     }
 })
+
+
+
 
 exports.getUsers = catchAsyncErrors(async (req, res) => {
     try {
@@ -321,10 +340,10 @@ exports.verfiyOtp = catchAsyncErrors(async (req, res, next) => {
 
 exports.internalservices = catchAsyncErrors(async (req, res) => {
     try {
-        console.log("finduser id " , req.params.id)
+        console.log("finduser id ", req.params.id)
 
         const findusers = await user.findById(req.params.id)
-        console.log("finduser " , findusers)
+        console.log("finduser ", findusers)
         if (!findusers) {
             res.status(400).json({
                 success: false,
@@ -345,6 +364,36 @@ exports.internalservices = catchAsyncErrors(async (req, res) => {
         res.status(400).json({
             success: false,
             message: "getUsersById failled in catch",
+        });
+    }
+})
+
+exports.updataData = catchAsyncErrors(async (req, res) => {
+    try {
+        bodyData = req.body
+        const data = await user.findById(req.params.id, {
+            bodyData
+        })
+        if (!data) {
+            res.status(400).json({
+                success: false,
+                message: "cannot update password",
+            });
+            return
+        }
+        if (data) {
+            res.status(200).json({
+                success: true,
+                message: "SuccessFully !",
+            });
+            return
+        }
+
+    } catch (err) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "failled while updating ",
         });
     }
 })
