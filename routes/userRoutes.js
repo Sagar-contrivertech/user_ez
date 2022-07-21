@@ -6,6 +6,8 @@ const { isAuthenticated } = require('../middleware/Auth')
 
 router.post('/register/user', ValidateUser, userController.registeruser)
 
+router.get('/me',isAuthenticated,userController.profile)
+
 router.post('/verify/auth/user', userController.loginUser)
 
 router.get('/get/user', isAuthenticated, userController.getUsers)

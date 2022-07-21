@@ -119,7 +119,8 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
             data1 = i
             console.log(i.password)
         })
-
+        console.log(data1)
+        const token = data1.getJwtToken()
         if (finduser) {
             let ismatch = await bcrypt.compare(password, passwordData)
             // let ismatch = finduser.comparePassword(password)
@@ -132,15 +133,15 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
             }
 
             if (ismatch) {
-                const token = jwt.sign({
-                    userId: user.id,
-                    isAdmin: user.isAdmin
-                },
-                    "ADGSGWUEVVKBSSGKJSKJJKGS",
-                    { expiresIn: '1w' }
-                )
+                // const token = jwt.sign({
+                //     id: finduser._id,
+                //     isAdmin: finduser.isAdmin
+                // },
+                //     "ADGSGWUEVVKBSSGKJSKJJKGS",
+                //     { expiresIn: '1w' }
+                // )
                 let userRoleData;
-                console.log("Role", role)
+                console.log("Role", token)
                 if (role === "agent") {
                     userRoleData = await agent.findOne({ agent_id: data1._id })
                 } else if (role === "consumer") {
@@ -155,8 +156,8 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
                 let data = []
                 // data.push(data1,token)
                 // console.log(";hjjj",data)
-                const token1 = Object.assign(data1,{token})
-                console.log(token1,'lll')
+                const token1 = Object.assign(data1, { token })
+                console.log(token1, 'lll')
                 if (userRoleData) {
                     res.status(200).json({
                         success: true,
@@ -432,3 +433,26 @@ exports.resetPassword = async (req, res, next) => {
         res.status(400).json({ message: "token invalid ! something went wrong" })
     }
 }
+
+// profile
+
+exports.profile = catchAsyncErrors(async (req, res, next) => {
+    try {
+        console.log(req.user.id)
+        const users = await user.findById(req.user.id)
+        console.log(users._id)
+        const findConsumer = await consumer.find({name:users._id}).populate('name')
+        // console.log(findConsumer)
+        res.status(200).json({
+            success: true,
+            message: "user fetch sucessfully", 
+            data:findConsumer,
+        })
+    } catch (err) {
+        console.log(err)
+        res.status(400).json({
+            success: false,
+            message: "token invalid ! something went wrong"
+        })
+    }
+})

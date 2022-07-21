@@ -76,7 +76,7 @@ exports.getConsumer = catchAsyncErrors(async (req, res) => {
 
 exports.getConsumerById = catchAsyncErrors(async (req, res) => {
     try {
-        const findusers = await consumer.findById(req.params.id)
+        const findusers = await consumer.findById(req.params.id).populate('user')
 
         if (!findusers) {
             res.status(400).json({

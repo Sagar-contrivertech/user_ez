@@ -7,10 +7,12 @@ exports.isAuthenticated = async (req, res, next) => {
     try {
         
         const token = req.get('Authorization');
+        // console.log(token)
         const verfiyUser = jwt.verify(token, "ASDFGHJKLASDFGHJKL");
         console.log('verfiyr', verfiyUser)
 
         req.user = await user.findById(verfiyUser.id)
+        // console.log(req.user)
         next()
     }
     catch (err) {
