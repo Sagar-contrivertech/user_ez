@@ -25,7 +25,7 @@ exports.addagent = catchAsyncErrors(async (req, res, next) => {
         const checkData = await agent.findOne({ agent_id: req.body.agent_id })
         if (checkData) {
             res.status(201).json({
-                success: true,
+                success: false,
                 message: "agent already exist",
             })
             return

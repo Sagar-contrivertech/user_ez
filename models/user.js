@@ -23,7 +23,7 @@ const user = mongoose.Schema({
     },
     isRemoved: {
         type: Boolean,
-        default:false
+        default: false
     },
     profileImage: {
         type: String
@@ -37,11 +37,14 @@ const user = mongoose.Schema({
             values: ["consumer", "businessOwner", "agent", "admin", "subAdmin"]
         }
     },
+    token: {
+        type: String
+    }
 }, { timestamps: true })
 
 
-user.methods.comparePassword = async function(enteredpassword){
-    return await bcrypt.compare(enteredpassword,this.password)
+user.methods.comparePassword = async function (enteredpassword) {
+    return await bcrypt.compare(enteredpassword, this.password)
 }
 
 

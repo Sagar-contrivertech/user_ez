@@ -36,7 +36,7 @@ exports.registeruser = catchAsyncErrors(async (req, res) => {
 
         if (finduser || finduserphone) {
             res.status(201).json({
-                success: true,
+                success: false,
                 message: 'user already exsit with same credtinals',
             })
             return
@@ -113,10 +113,10 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
             return
         }
         let passwordData
-        let data
+        let data1
         finduser && finduser.map((i) => {
             passwordData = i.password
-            data = i
+            data1 = i
             console.log(i.password)
         })
 
@@ -142,24 +142,28 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
                 let userRoleData;
                 console.log("Role", role)
                 if (role === "agent") {
-                    userRoleData = await agent.findOne({ agent_id: data._id })
+                    userRoleData = await agent.findOne({ agent_id: data1._id })
                 } else if (role === "consumer") {
-                    userRoleData = await consumer.findOne({ name: data._id })
+                    userRoleData = await consumer.findOne({ name: data1._id })
                 } else if (role === "businessOwner") {
-                    userRoleData = await bussinessOwner.findOne({ name: data._id })
+                    userRoleData = await bussinessOwner.findOne({ name: data1._id })
                 } else if (role === "admin") {
-                    userRoleData = await admin.findOne({ name: data._id })
+                    userRoleData = await admin.findOne({ name: data1._id })
                 } else if (role === "subAdmin") {
-                    userRoleData = await admin.findOne({ name: data._id })
+                    userRoleData = await admin.findOne({ name: data1._id })
                 }
-
+                let data = []
+                // data.push(data1,token)
+                // console.log(";hjjj",data)
+                const token1 = Object.assign(data1,{token})
+                console.log(token1,'lll')
                 if (userRoleData) {
                     res.status(200).json({
                         success: true,
                         message: "Login succesfully ",
-                        data: data,
-                        userRole: userRoleData,
-                        token: token
+                        data: token1,
+                        // userRole: userRoleData,
+                        // token: token
                     });
                 } else {
                     res.status(400).json({
@@ -268,7 +272,7 @@ exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
                         data = verification
                         if (data) {
                             res.status(200).json({
-                                sucess: true,
+                                success: true,
                                 message: "otp send successfully",
                                 data: data
                             })
@@ -276,7 +280,7 @@ exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
                         }
                         if (!data) {
                             res.status(400).json({
-                                sucess: false,
+                                success: false,
                                 message: "otp send cannot send !",
                             })
                         }
@@ -313,7 +317,7 @@ exports.verfiyOtp = catchAsyncErrors(async (req, res, next) => {
                 console.log(verification_check)
                 if (data.valid === true) {
                     res.status(200).json({
-                        sucess: true,
+                        success: true,
                         message: "otp verfied",
                         data: data
                     })
@@ -321,7 +325,7 @@ exports.verfiyOtp = catchAsyncErrors(async (req, res, next) => {
                 }
                 if (!data) {
                     res.status(400).json({
-                        sucess: false,
+                        success: false,
                         message: "otp send cannot send !",
                     })
                 }
@@ -397,3 +401,34 @@ exports.updataData = catchAsyncErrors(async (req, res) => {
         });
     }
 })
+
+
+// reset password
+exports.resetPassword = async (req, res, next) => {
+    try {
+        // const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+
+        // const user = await User.findOne({
+        //     resetPasswordToken,
+        //     resetpasswordExpire: { $gt: Date.now() }
+        // })
+        if (!user) {
+            return next(res.status(400).json({ mesage: "password token invalid or expried", }))
+        }
+        if (!req.body.password == req.body.confirmpassword) {
+            return next(res.status(400).json({ message: "password and confirm password dont match" }))
+        }
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(req.body.password, salt);
+        console.log('password', user.password)
+        user.resetpassword = undefined;
+        user.resetpasswordExpire = undefined;
+
+
+        await user.save()
+        res.status(200).json({ message: "password reset ,!go back and login", resetPasswordToken })
+    } catch (err) {
+        console.log(err)
+        res.status(400).json({ message: "token invalid ! something went wrong" })
+    }
+}

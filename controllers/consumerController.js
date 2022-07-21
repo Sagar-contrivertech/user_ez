@@ -8,7 +8,7 @@ exports.addCosumer = catchAsyncErrors(async (req, res) => {
         const checkData = await consumer.findOne({ name: req.body.name })
         if (checkData) {
             res.status(201).json({
-                success: true,
+                success: false,
                 message: "cosumer already exist",
             })
             return

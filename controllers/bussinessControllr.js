@@ -7,7 +7,7 @@ exports.addbussiness = catchAsyncErrors(async (req, res) => {
         const finduser = await BusinessOwner.findOne({ name: req.body.name });
         if (finduser) {
             res.status(201).json({
-                success: true,
+                success: false,
                 message: 'owner exsit with same credtinals',
             })
             return
