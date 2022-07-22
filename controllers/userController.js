@@ -158,7 +158,7 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
                 // console.log(";hjjj",data)
                 const token1 = Object.assign(data1, { token })
                 console.log(token1, 'lll')
-                if (userRoleData) {
+                if (token1) {
                     res.status(200).json({
                         success: true,
                         message: "Login succesfully ",
@@ -192,7 +192,6 @@ exports.loginUser = catchAsyncErrors(async (req, res) => {
 exports.getUsers = catchAsyncErrors(async (req, res) => {
     try {
         const findusers = await user.find()
-
         if (!findusers) {
             res.status(400).json({
                 success: false,
@@ -441,12 +440,12 @@ exports.profile = catchAsyncErrors(async (req, res, next) => {
         console.log(req.user.id)
         const users = await user.findById(req.user.id)
         console.log(users._id)
-        const findConsumer = await consumer.find({name:users._id}).populate('name')
+        const findConsumer = await consumer.find({ name: users._id }).populate('name')
         // console.log(findConsumer)
         res.status(200).json({
             success: true,
-            message: "user fetch sucessfully", 
-            data:findConsumer,
+            message: "user fetch sucessfully",
+            data: findConsumer,
         })
     } catch (err) {
         console.log(err)
